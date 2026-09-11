@@ -43,7 +43,7 @@ class Store:
         self.path = str(path)
         self._db: aiosqlite.Connection | None = None
 
-    async def open(self) -> "Store":
+    async def open(self) -> Store:
         self._db = await aiosqlite.connect(self.path)
         self._db.row_factory = aiosqlite.Row
         await self._db.executescript(SCHEMA)
@@ -136,7 +136,8 @@ class Store:
     async def find_run_for_email(self, email_id: str) -> Run | None:
         """Prevents the ghost pill from re-offering an email that already has a live run."""
         cur = await self.db.execute(
-            "SELECT payload FROM runs WHERE status NOT IN ('stopped','failed','reverted','no_match')"
+            "SELECT payload FROM runs"
+            " WHERE status NOT IN ('stopped','failed','reverted','no_match')"
             " ORDER BY created_at DESC LIMIT 50"
         )
         for r in await cur.fetchall():

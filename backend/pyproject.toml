@@ -30,6 +30,16 @@ testpaths = ["tests"]
 line-length = 100
 target-version = "py311"
 
+[tool.ruff.lint]
+# E/F: correctness. I: import order. UP: modern syntax. B: bug-prone patterns. RUF: ruff extras.
+# Blind `except Exception` is allowed only at network boundaries and is commented where used,
+# so BLE is deliberately not selected. B008 is FastAPI's `File(...)` default idiom.
+select = ["E", "F", "I", "UP", "B", "RUF"]
+ignore = ["B008", "E731"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402"]
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"

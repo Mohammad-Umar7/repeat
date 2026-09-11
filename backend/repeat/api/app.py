@@ -25,9 +25,13 @@ log = logging.getLogger("repeat")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     s = get_settings()
-    logging.basicConfig(level=s.repeat_log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(
+        level=s.repeat_log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
     store = await Store(s.repeat_db_path).open()
-    deps = Deps(settings=s, store=store, bus=EventBus(), integrations=get_integrations(), llm=get_llm())
+    deps = Deps(
+        settings=s, store=store, bus=EventBus(), integrations=get_integrations(), llm=get_llm()
+    )
     set_deps(deps)
     orphaned = await store.stop_orphaned_runs(
         "Interrupted by a backend restart. Committed steps can still be undone."
@@ -39,7 +43,10 @@ async def lifespan(app: FastAPI):
         log.info("seeded demo workflow")
     log.info(
         "REPEAT %s ready on http://127.0.0.1:%d  (integrations=%s, llm=%s)",
-        __version__, s.repeat_port, deps.integrations.mode, deps.llm.name,
+        __version__,
+        s.repeat_port,
+        deps.integrations.mode,
+        deps.llm.name,
     )
     try:
         yield

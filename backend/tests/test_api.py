@@ -85,7 +85,9 @@ async def test_fault_injection_produces_paused_state(deps):
     async with await _client() as c:
         assert (await c.post("/demo/fault", json={"app": "slack"})).json()["ok"] is True
         state = (await c.post("/runs/match", json={"email_id": "demo-mail-002"})).json()
-        state = (await c.post(f"/runs/{state['run']['id']}/decide", json={"decision": "all"})).json()
+        state = (
+            await c.post(f"/runs/{state['run']['id']}/decide", json={"decision": "all"})
+        ).json()
         assert state["interrupt"]["type"] == "failure"
         assert state["run"]["status"] == "paused"
         assert state["run"]["steps"][1]["status"] == "failed"

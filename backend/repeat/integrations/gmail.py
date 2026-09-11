@@ -29,8 +29,8 @@ def _plain_body(payload: dict) -> str:
         if data and mime == "text/html" and not html:
             html = base64.urlsafe_b64decode(data).decode("utf-8", "replace")
         stack.extend(part.get("parts", []))
-    text = re.sub(r"<(script|style).*?</\1>", "", html, flags=re.S | re.I)
-    text = re.sub(r"<br\s*/?>|</p>|</div>", "\n", text, flags=re.I)
+    text = re.sub(r"<(script|style).*?</\1>", "", html, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<br\s*/?>|</p>|</div>", "\n", text, flags=re.IGNORECASE)
     text = re.sub(r"<[^>]+>", "", text)
     return re.sub(r"\n{3,}", "\n\n", text).strip()
 
@@ -69,7 +69,8 @@ class LiveGmailClient(GmailClient):
             else:
                 if not self.credentials_file.exists():
                     raise IntegrationError(
-                        f"Gmail OAuth client file missing at {self.credentials_file}.", retryable=False
+                        f"Gmail OAuth client file missing at {self.credentials_file}.",
+                        retryable=False,
                     )
                 flow = InstalledAppFlow.from_client_secrets_file(str(self.credentials_file), SCOPES)
                 creds = flow.run_local_server(port=0)
@@ -112,7 +113,9 @@ class LiveGmailClient(GmailClient):
     async def latest_email(self) -> EmailContext | None:
         def _fetch():
             svc = self._build()
-            res = svc.users().messages().list(userId="me", labelIds=["INBOX"], maxResults=1).execute()
+            res = (
+                svc.users().messages().list(userId="me", labelIds=["INBOX"], maxResults=1).execute()
+            )
             ids = res.get("messages", [])
             if not ids:
                 return None
@@ -171,7 +174,9 @@ class LiveGmailClient(GmailClient):
         lid = await self._run(_do)
         return ActionResult(
             outputs={"label": label, "label_id": lid},
-            undo_token=UndoToken(kind="gmail_label", ref={"message_id": message_id, "label": label}),
+            undo_token=UndoToken(
+                kind="gmail_label", ref={"message_id": message_id, "label": label}
+            ),
             result_url=f"https://mail.google.com/mail/u/0/#inbox/{message_id}",
         )
 
@@ -195,4 +200,6 @@ class LiveGmailClient(GmailClient):
 
         await self._run(_do)
         check = await self.verify_label(message_id, label)
-        return VerifyResult(not check.ok, "Label removed and confirmed." if not check.ok else "Label still present.")
+        return VerifyResult(
+            not check.ok, "Label removed and confirmed." if not check.ok else "Label still present."
+        )

@@ -1,10 +1,10 @@
 """Agent nodes. Every node follows the same contract:
 
-  * do one thing,
-  * persist the Run/Workflow and publish an event so the panel is never stale,
-  * on failure: set state["failure"] with a ONE-SENTENCE explanation and return.
-    The graph routes to a gate that pauses and offers retry / skip / stop.
-    Nothing is ever silently continued.
+* do one thing,
+* persist the Run/Workflow and publish an event so the panel is never stale,
+* on failure: set state["failure"] with a ONE-SENTENCE explanation and return.
+  The graph routes to a gate that pauses and offers retry / skip / stop.
+  Nothing is ever silently continued.
 """
 
 from __future__ import annotations
@@ -75,7 +75,11 @@ async def observe(state: TeachState) -> TeachState:
     for e in events:
         row = e.model_dump(mode="json", exclude_none=True)
         # collapse successive input events on the same field to the final value
-        if e.kind.value == "input" and last_input and last_input.get("field_label") == e.field_label:
+        if (
+            e.kind.value == "input"
+            and last_input
+            and last_input.get("field_label") == e.field_label
+        ):
             last_input["value"] = e.value
             last_input["ts"] = e.ts
             continue
@@ -91,7 +95,11 @@ async def observe(state: TeachState) -> TeachState:
         if nearest is not None and abs(nearest["ts"] - n.ts) < 8000:
             nearest.setdefault("narration", []).append(n.transcript or n.text or "")
     if not out:
-        return {"failure": _fail("observe", "No usable events were recorded; try the demonstration again.", False)}
+        return {
+            "failure": _fail(
+                "observe", "No usable events were recorded; try the demonstration again.", False
+            )
+        }
     return {"normalized": out, "failure": None}
 
 
@@ -104,11 +112,15 @@ async def generalize(state: TeachState) -> TeachState:
             system=system, user=user, schema=GeneralizeOutput
         )
     except LLMError as e:
-        return {"failure": _fail("generalize", f"The model could not generalise the demonstration ({e}).")}
+        return {
+            "failure": _fail(
+                "generalize", f"The model could not generalise the demonstration ({e})."
+            )
+        }
     steps: list[WorkflowStep] = []
     for i, s in enumerate(g.steps):
         app = s.action.split(".")[0]
-        fields = dict(zip(s.field_names, s.field_templates))
+        fields = dict(zip(s.field_names, s.field_templates, strict=False))
         steps.append(
             WorkflowStep(
                 id=f"s{i + 1}_{s.action.split('.')[1]}",
@@ -154,8 +166,14 @@ async def record_workflow(state: TeachState) -> TeachState:
 async def teach_failure_gate(state: TeachState) -> TeachState:
     f = state.get("failure")
     assert f
-    decision = interrupt({"type": "failure", "node": f["node"], "message": f["message"],
-                          "options": ["retry", "stop"] if f["retryable"] else ["stop"]})
+    decision = interrupt(
+        {
+            "type": "failure",
+            "node": f["node"],
+            "message": f["message"],
+            "options": ["retry", "stop"] if f["retryable"] else ["stop"],
+        }
+    )
     choice = (decision or {}).get("decision", "stop")
     if choice == "retry" and f["retryable"]:
         return {"decision": "retry", "failure": None}
@@ -174,7 +192,9 @@ async def match(state: RunState) -> RunState:
         "match", {"trigger": wf.trigger.model_dump(), "email": email.model_dump(exclude={"labels"})}
     )
     try:
-        m: MatchOutput = await d.llm.complete_structured(system=system, user=user, schema=MatchOutput)
+        m: MatchOutput = await d.llm.complete_structured(
+            system=system, user=user, schema=MatchOutput
+        )
     except LLMError as e:
         run.status = RunStatus.no_match
         run.match_reason = f"Could not evaluate this email ({e})."
@@ -197,14 +217,20 @@ async def plan(state: RunState) -> RunState:
     d = get_deps()
     wf, email, run = state["workflow"], state["email"], state["run"]
     email_vars = [v.model_dump() for v in wf.variables if v.source.startswith("email.")]
-    system, user = render("plan", {"variables": email_vars, "email": email.model_dump(exclude={"labels"})})
+    system, user = render(
+        "plan", {"variables": email_vars, "email": email.model_dump(exclude={"labels"})}
+    )
     try:
         p: PlanOutput = await d.llm.complete_structured(system=system, user=user, schema=PlanOutput)
         values = {v.name: v.value for v in p.values}
     except LLMError as e:
         return {"failure": _fail("plan", f"The model could not fill the variables ({e}).")}
     # guarantee every email-sourced variable has a value even if the model skipped one
-    direct = {"email.subject": email.subject, "email.body": email.body, "email.sender": email.sender_name or email.sender}
+    direct = {
+        "email.subject": email.subject,
+        "email.body": email.body,
+        "email.sender": email.sender_name or email.sender,
+    }
     for v in wf.variables:
         if v.source in direct and not values.get(v.name):
             values[v.name] = direct[v.source]
@@ -231,14 +257,18 @@ async def assess_risk(state: RunState) -> RunState:
     system, user = render(
         "assess_risk",
         {
-            "steps": [{"action": s.action.value, "app": s.app, "inputs": s.inputs} for s in run.steps],
+            "steps": [
+                {"action": s.action.value, "app": s.app, "inputs": s.inputs} for s in run.steps
+            ],
             "slack_channel": d.settings.slack_channel,
         },
     )
     try:
         r: RiskOutput = await d.llm.complete_structured(system=system, user=user, schema=RiskOutput)
     except LLMError as e:
-        return {"failure": _fail("assess_risk", f"The model could not compute the risk summary ({e}).")}
+        return {
+            "failure": _fail("assess_risk", f"The model could not compute the risk summary ({e}).")
+        }
     run.risk = RiskSummary(**r.model_dump())
     run.status = RunStatus.awaiting_approval
     await _save(run, "run.awaiting_approval")
@@ -278,8 +308,13 @@ async def step_gate(state: RunState) -> RunState:
     step.status = StepStatus.previewing
     await _save(run, "step.previewing", {"step_index": idx})
     decision = interrupt(
-        {"type": "step_gate", "run_id": run.id, "step_index": idx,
-         "step": step.model_dump(mode="json"), "options": ["commit", "all", "stop"]}
+        {
+            "type": "step_gate",
+            "run_id": run.id,
+            "step_index": idx,
+            "step": step.model_dump(mode="json"),
+            "options": ["commit", "all", "stop"],
+        }
     )
     choice = (decision or {}).get("decision", "stop")
     if choice == "stop":
@@ -299,13 +334,18 @@ async def _do_action(run: Run, step: RunStep) -> ActionResult:
         note = step.inputs.get("reporter_note")
         if note:
             desc = f"{desc}\n\n{note}"
-        return await i.jira.create_issue(summary=step.inputs.get("summary", "(no summary)"), description=desc)
+        return await i.jira.create_issue(
+            summary=step.inputs.get("summary", "(no summary)"), description=desc
+        )
     if step.action == StepAction.slack_post_message:
         return await i.slack.post_message(
-            channel=step.inputs.get("channel") or d.settings.slack_channel, text=step.inputs.get("text", "")
+            channel=step.inputs.get("channel") or d.settings.slack_channel,
+            text=step.inputs.get("text", ""),
         )
     if step.action == StepAction.gmail_apply_label:
-        return await i.gmail.apply_label(run.email.id, step.inputs.get("label") or d.settings.gmail_handled_label)
+        return await i.gmail.apply_label(
+            run.email.id, step.inputs.get("label") or d.settings.gmail_handled_label
+        )
     raise IntegrationError(f"Unknown action {step.action}.", retryable=False)
 
 
@@ -389,7 +429,9 @@ async def record(state: RunState) -> RunState:
         wf = state["workflow"]
         started = datetime.fromisoformat(run.created_at).timestamp()
         elapsed = int(max(0, time.time() - started))
-        run.seconds_saved = max(0, wf.estimated_manual_seconds - min(elapsed, wf.estimated_manual_seconds))
+        run.seconds_saved = max(
+            0, wf.estimated_manual_seconds - min(elapsed, wf.estimated_manual_seconds)
+        )
         wf.run_count += 1
         await d.store.save_workflow(wf)
         await _save(run, "run.completed")
@@ -407,8 +449,14 @@ async def failure_gate(state: RunState) -> RunState:
     if f["node"] in ("plan", "assess_risk") and "skip" in options:
         options.remove("skip")  # nothing sensible to skip to before the first commit
     decision = interrupt(
-        {"type": "failure", "run_id": run.id, "node": f["node"], "message": f["message"],
-         "step_index": run.current_step, "options": options}
+        {
+            "type": "failure",
+            "run_id": run.id,
+            "node": f["node"],
+            "message": f["message"],
+            "step_index": run.current_step,
+            "options": options,
+        }
     )
     choice = (decision or {}).get("decision", "stop")
     if choice not in options:

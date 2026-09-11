@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import itertools
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..models import EmailContext, UndoToken
 from .base import (
@@ -52,7 +52,7 @@ class SandboxJira(JiraClient):
             "summary": summary,
             "description": description,
             "status": "To Do",
-            "created": datetime.now(timezone.utc).isoformat(),
+            "created": datetime.now(UTC).isoformat(),
         }
         url = f"{self.base_url}/browse/{key}"
         return ActionResult(
@@ -64,7 +64,9 @@ class SandboxJira(JiraClient):
     async def verify_issue(self, key: str) -> VerifyResult:
         await asyncio.sleep(LATENCY / 2)
         if key in self.issues:
-            return VerifyResult(True, f"{key} exists (To Do)", {"summary": self.issues[key]["summary"]})
+            return VerifyResult(
+                True, f"{key} exists (To Do)", {"summary": self.issues[key]["summary"]}
+            )
         return VerifyResult(False, f"{key} was not found in Jira.")
 
     async def delete_issue(self, key: str) -> VerifyResult:
@@ -97,14 +99,18 @@ class SandboxSlack(SlackClient):
         link = f"https://demo.slack.com/archives/{self.channel_id}/p{ts.replace('.', '')}"
         return ActionResult(
             outputs={"slack_ts": ts, "slack_channel_id": self.channel_id, "slack_permalink": link},
-            undo_token=UndoToken(kind="slack_message", ref={"channel_id": self.channel_id, "ts": ts}),
+            undo_token=UndoToken(
+                kind="slack_message", ref={"channel_id": self.channel_id, "ts": ts}
+            ),
             result_url=link,
         )
 
     async def verify_message(self, channel_id: str, ts: str) -> VerifyResult:
         await asyncio.sleep(LATENCY / 2)
         if ts in self.messages:
-            return VerifyResult(True, "Message is live in Slack.", {"text": self.messages[ts]["text"]})
+            return VerifyResult(
+                True, "Message is live in Slack.", {"text": self.messages[ts]["text"]}
+            )
         return VerifyResult(False, "Message not found in channel history.")
 
     async def delete_message(self, channel_id: str, ts: str) -> VerifyResult:
@@ -123,17 +129,19 @@ DEMO_EMAILS: list[EmailContext] = [
         body=(
             "Hi team,\n\n"
             "Since this morning the Checkout button on the cart page does nothing on Safari 17 "
-            "(macOS 14.5). Clicking it shows a brief spinner and then the page stays on the cart.\n\n"
+            "(macOS 14.5). Clicking it shows a brief spinner and then the page stays on the "
+            "cart.\n\n"
             "Steps to reproduce:\n"
             "1. Add any item to the cart\n"
             "2. Open the cart page in Safari 17\n"
             "3. Click Checkout\n\n"
             "Expected: redirected to payment.\n"
-            "Actual: spinner, then nothing. Console shows TypeError: window.__stripe is undefined.\n\n"
+            "Actual: spinner, then nothing. "
+            "Console shows TypeError: window.__stripe is undefined.\n\n"
             "Chrome works fine. About 12 customers have written in so far.\n\n"
             "Thanks,\nPriya"
         ),
-        received_at=datetime.now(timezone.utc).isoformat(),
+        received_at=datetime.now(UTC).isoformat(),
         labels=["INBOX", "UNREAD"],
     ),
     EmailContext(
@@ -148,7 +156,7 @@ DEMO_EMAILS: list[EmailContext] = [
             "Steps: Reports > Transactions > Export CSV on the Q2 range.\n"
             "Expected: 14,312 rows. Actual: 10,000 rows.\n\nMarcus"
         ),
-        received_at=datetime.now(timezone.utc).isoformat(),
+        received_at=datetime.now(UTC).isoformat(),
         labels=["INBOX", "UNREAD"],
     ),
     EmailContext(
@@ -158,7 +166,7 @@ DEMO_EMAILS: list[EmailContext] = [
         sender="sam@friends.example",
         sender_name="Sam",
         body="Hey! Are you free for lunch Thursday? The new ramen place opened.",
-        received_at=datetime.now(timezone.utc).isoformat(),
+        received_at=datetime.now(UTC).isoformat(),
         labels=["INBOX"],
     ),
 ]
@@ -192,7 +200,9 @@ class SandboxGmail(GmailClient):
             email.labels.append(label)
         return ActionResult(
             outputs={"label": label, "label_id": "Label_42"},
-            undo_token=UndoToken(kind="gmail_label", ref={"message_id": message_id, "label": label}),
+            undo_token=UndoToken(
+                kind="gmail_label", ref={"message_id": message_id, "label": label}
+            ),
             result_url=f"https://mail.google.com/mail/u/0/#inbox/{message_id}",
         )
 

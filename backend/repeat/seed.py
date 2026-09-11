@@ -34,11 +34,23 @@ def demo_workflow(project_key: str, channel: str) -> Workflow:
             body_keywords=["steps to reproduce", "expected", "actual", "console"],
         ),
         variables=[
-            Variable(name="email_subject", source="email.subject", description="Becomes the issue summary"),
-            Variable(name="email_body", source="email.body", description="Becomes the issue description"),
+            Variable(
+                name="email_subject",
+                source="email.subject",
+                description="Becomes the issue summary",
+            ),
+            Variable(
+                name="email_body", source="email.body", description="Becomes the issue description"
+            ),
             Variable(name="reporter", source="email.sender", description="Who reported it"),
-            Variable(name="issue_key", source="step:create_issue.key", description="Jira key, e.g. DEMO-142"),
-            Variable(name="issue_url", source="step:create_issue.url", description="Link to the issue"),
+            Variable(
+                name="issue_key",
+                source="step:create_issue.key",
+                description="Jira key, e.g. DEMO-142",
+            ),
+            Variable(
+                name="issue_url", source="step:create_issue.url", description="Link to the issue"
+            ),
         ],
         steps=[
             WorkflowStep(
@@ -62,7 +74,10 @@ def demo_workflow(project_key: str, channel: str) -> Workflow:
                 title=f"Post to #{channel}",
                 fields={
                     "channel": channel,
-                    "text": ":beetle: New bug from {reporter}: *{email_subject}* → {issue_key} {issue_url}",
+                    "text": (
+                        ":beetle: New bug from {reporter}: *{email_subject}* "
+                        "→ {issue_key} {issue_url}"
+                    ),
                 },
                 produces=["slack_ts"],
             ),
@@ -81,7 +96,7 @@ def demo_workflow(project_key: str, channel: str) -> Workflow:
 
 def demo_demonstration(project_key: str, channel: str) -> Demonstration:
     t0 = time.time() * 1000 - 600_000
-    ev = lambda kind, dt, app, url, title, **kw: RecordedEvent(  # noqa: E731
+    ev = lambda kind, dt, app, url, title, **kw: RecordedEvent(
         kind=kind, ts=t0 + dt, app=app, url=url, title=title, **kw
     )
     gmail_url = "https://mail.google.com/mail/u/0/#inbox/18f2a"
@@ -94,22 +109,109 @@ def demo_demonstration(project_key: str, channel: str) -> Demonstration:
             ev(EventKind.navigate, 0, "gmail", gmail_url, subject + " - Gmail"),
             ev(EventKind.copy, 4_200, "gmail", gmail_url, subject + " - Gmail", text=subject),
             ev(EventKind.navigate, 9_000, "jira", jira_url, "DEMO board - Jira"),
-            ev(EventKind.click, 10_500, "jira", jira_url, "DEMO board - Jira", target_text="Create", target_role="button"),
-            ev(EventKind.paste, 13_000, "jira", jira_url, "Create issue - Jira", text=subject, field_label="Summary"),
-            ev(EventKind.input, 13_100, "jira", jira_url, "Create issue - Jira", field_label="Summary", value=subject),
+            ev(
+                EventKind.click,
+                10_500,
+                "jira",
+                jira_url,
+                "DEMO board - Jira",
+                target_text="Create",
+                target_role="button",
+            ),
+            ev(
+                EventKind.paste,
+                13_000,
+                "jira",
+                jira_url,
+                "Create issue - Jira",
+                text=subject,
+                field_label="Summary",
+            ),
+            ev(
+                EventKind.input,
+                13_100,
+                "jira",
+                jira_url,
+                "Create issue - Jira",
+                field_label="Summary",
+                value=subject,
+            ),
             ev(EventKind.navigate, 16_000, "gmail", gmail_url, subject + " - Gmail"),
-            ev(EventKind.copy, 19_000, "gmail", gmail_url, subject + " - Gmail", text="After resetting my password the login page is blank. Console: Uncaught ReferenceError."),
+            ev(
+                EventKind.copy,
+                19_000,
+                "gmail",
+                gmail_url,
+                subject + " - Gmail",
+                text=(
+                    "After resetting my password the login page is blank. "
+                    "Console: Uncaught ReferenceError."
+                ),
+            ),
             ev(EventKind.navigate, 22_000, "jira", jira_url, "Create issue - Jira"),
-            ev(EventKind.paste, 24_000, "jira", jira_url, "Create issue - Jira", field_label="Description", text="After resetting my password the login page is blank."),
-            ev(EventKind.click, 27_000, "jira", jira_url, "Create issue - Jira", target_text="Create", target_role="button"),
+            ev(
+                EventKind.paste,
+                24_000,
+                "jira",
+                jira_url,
+                "Create issue - Jira",
+                field_label="Description",
+                text="After resetting my password the login page is blank.",
+            ),
+            ev(
+                EventKind.click,
+                27_000,
+                "jira",
+                jira_url,
+                "Create issue - Jira",
+                target_text="Create",
+                target_role="button",
+            ),
             ev(EventKind.navigate, 33_000, "slack", slack_url, f"#{channel} - Slack"),
-            ev(EventKind.input, 41_000, "slack", slack_url, f"#{channel} - Slack", field_label="Message to #" + channel, value=f"New bug from Dana Whitfield: {subject} → {project_key}-141"),
-            ev(EventKind.click, 42_500, "slack", slack_url, f"#{channel} - Slack", target_text="Send", target_role="button"),
+            ev(
+                EventKind.input,
+                41_000,
+                "slack",
+                slack_url,
+                f"#{channel} - Slack",
+                field_label="Message to #" + channel,
+                value=f"New bug from Dana Whitfield: {subject} → {project_key}-141",
+            ),
+            ev(
+                EventKind.click,
+                42_500,
+                "slack",
+                slack_url,
+                f"#{channel} - Slack",
+                target_text="Send",
+                target_role="button",
+            ),
         ],
         narration=[
-            ev(EventKind.narration, 4_400, "gmail", gmail_url, "", transcript="The subject becomes the ticket summary."),
-            ev(EventKind.narration, 19_500, "gmail", gmail_url, "", transcript="The body goes into the description, and the sender is the reporter."),
-            ev(EventKind.narration, 41_500, "slack", slack_url, "", transcript="Then I tell the channel with the ticket key."),
+            ev(
+                EventKind.narration,
+                4_400,
+                "gmail",
+                gmail_url,
+                "",
+                transcript="The subject becomes the ticket summary.",
+            ),
+            ev(
+                EventKind.narration,
+                19_500,
+                "gmail",
+                gmail_url,
+                "",
+                transcript="The body goes into the description, and the sender is the reporter.",
+            ),
+            ev(
+                EventKind.narration,
+                41_500,
+                "slack",
+                slack_url,
+                "",
+                transcript="Then I tell the channel with the ticket key.",
+            ),
         ],
         workflow_id=DEMO_WORKFLOW_ID,
     )

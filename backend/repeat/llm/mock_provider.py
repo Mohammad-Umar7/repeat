@@ -27,8 +27,31 @@ from .base import LLMError, LLMProvider
 T = TypeVar("T", bound=BaseModel)
 
 _STOP = {
-    "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "is", "it", "this",
-    "that", "with", "when", "we", "i", "you", "at", "by", "from", "be", "as", "are",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "of",
+    "to",
+    "in",
+    "on",
+    "for",
+    "is",
+    "it",
+    "this",
+    "that",
+    "with",
+    "when",
+    "we",
+    "i",
+    "you",
+    "at",
+    "by",
+    "from",
+    "be",
+    "as",
+    "are",
 }
 
 
@@ -78,10 +101,17 @@ class MockProvider(LLMProvider):
     def _generalize(self, data: dict) -> GeneralizeOutput:
         events = data.get("events", [])
         apps = [e.get("app") for e in events]
-        subject = next(
-            (e.get("text") for e in events if e.get("kind") == "copy" and e.get("app") == "gmail"),
-            "",
-        ) or ""
+        subject = (
+            next(
+                (
+                    e.get("text")
+                    for e in events
+                    if e.get("kind") == "copy" and e.get("app") == "gmail"
+                ),
+                "",
+            )
+            or ""
+        )
         steps: list[GeneralizedStep] = []
         if "jira" in apps:
             steps.append(
@@ -124,11 +154,21 @@ class MockProvider(LLMProvider):
             subject_keywords=_keywords(subject) or ["bug", "error", "broken"],
             body_keywords=["steps", "reproduce", "expected", "actual"],
             variables=[
-                GeneralizedVariable(name="email_subject", source="email.subject", description="Subject line"),
-                GeneralizedVariable(name="email_body", source="email.body", description="Plain-text body"),
-                GeneralizedVariable(name="reporter", source="email.sender", description="Sender address"),
-                GeneralizedVariable(name="issue_key", source="step:create_issue.key", description="Jira key"),
-                GeneralizedVariable(name="issue_url", source="step:create_issue.url", description="Jira link"),
+                GeneralizedVariable(
+                    name="email_subject", source="email.subject", description="Subject line"
+                ),
+                GeneralizedVariable(
+                    name="email_body", source="email.body", description="Plain-text body"
+                ),
+                GeneralizedVariable(
+                    name="reporter", source="email.sender", description="Sender address"
+                ),
+                GeneralizedVariable(
+                    name="issue_key", source="step:create_issue.key", description="Jira key"
+                ),
+                GeneralizedVariable(
+                    name="issue_url", source="step:create_issue.url", description="Jira link"
+                ),
             ],
             steps=steps,
             estimated_manual_seconds=240,
@@ -137,7 +177,7 @@ class MockProvider(LLMProvider):
     def _match(self, data: dict) -> MatchOutput:
         email = data.get("email", {})
         trigger = data.get("trigger", {})
-        hay = f"{email.get('subject','')} {email.get('body','')}".lower()
+        hay = f"{email.get('subject', '')} {email.get('body', '')}".lower()
         subj_hits = [k for k in trigger.get("subject_keywords", []) if k.lower() in hay]
         body_hits = [k for k in trigger.get("body_keywords", []) if k.lower() in hay]
         score = min(1.0, 0.35 * len(subj_hits) + 0.15 * len(body_hits))
@@ -145,8 +185,9 @@ class MockProvider(LLMProvider):
         if generic:
             score = max(score, 0.82)
         matched = score >= 0.6
+        evidence = ", ".join(subj_hits + body_hits) or "bug language"
         reason = (
-            f"Subject and body look like a bug report ({', '.join(subj_hits + body_hits) or 'bug language'})."
+            f"Subject and body look like a bug report ({evidence})."
             if matched
             else "Email does not read like a bug report."
         )
@@ -157,9 +198,13 @@ class MockProvider(LLMProvider):
         values = [
             PlannedValue(name="email_subject", value=email.get("subject", "")),
             PlannedValue(name="email_body", value=(email.get("body", "") or "")[:1500]),
-            PlannedValue(name="reporter", value=email.get("sender_name") or email.get("sender", "")),
+            PlannedValue(
+                name="reporter", value=email.get("sender_name") or email.get("sender", "")
+            ),
         ]
-        return PlanOutput(values=values, notes="Mapped subject, body and sender directly from the email.")
+        return PlanOutput(
+            values=values, notes="Mapped subject, body and sender directly from the email."
+        )
 
     def _risk(self, data: dict) -> RiskOutput:
         steps = data.get("steps", [])

@@ -46,7 +46,9 @@ def _teach_result(snap) -> dict[str, Any]:
     values = snap.values or {}
     wf: Workflow | None = values.get("workflow") if not values.get("failure") else None
     return {
-        "workflow": wf.model_dump(mode="json") if wf and not values.get("stopped") and not _pending_interrupt(snap) else None,
+        "workflow": wf.model_dump(mode="json")
+        if wf and not values.get("stopped") and not _pending_interrupt(snap)
+        else None,
         "interrupt": _pending_interrupt(snap),
         "stopped": bool(values.get("stopped")),
     }
@@ -63,7 +65,14 @@ async def start_run(workflow: Workflow, email: EmailContext) -> dict[str, Any]:
     cfg = {"configurable": {"thread_id": run.id}}
     g = run_graph()
     await g.ainvoke(
-        {"workflow": workflow, "email": email, "run": run, "mode": "step", "failure": None, "stopped": False},
+        {
+            "workflow": workflow,
+            "email": email,
+            "run": run,
+            "mode": "step",
+            "failure": None,
+            "stopped": False,
+        },
         cfg,
     )
     return await _run_result(run.id)

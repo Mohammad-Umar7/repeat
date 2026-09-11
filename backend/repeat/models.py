@@ -8,15 +8,15 @@ to JSON columns in SQLite without translation.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def new_id(prefix: str) -> str:
@@ -26,7 +26,7 @@ def new_id(prefix: str) -> str:
 # ── Recorded events (Teach mode) ─────────────────────────────────────────
 
 
-class EventKind(str, Enum):
+class EventKind(StrEnum):
     copy = "copy"
     paste = "paste"
     input = "input"
@@ -77,11 +77,13 @@ class Trigger(BaseModel):
 
 class Variable(BaseModel):
     name: str = Field(description="snake_case identifier used inside step templates as {name}")
-    source: str = Field(description="Where the value comes from, e.g. email.subject, step:create_issue.key")
+    source: str = Field(
+        description="Where the value comes from, e.g. email.subject, step:create_issue.key"
+    )
     description: str = ""
 
 
-class StepAction(str, Enum):
+class StepAction(StrEnum):
     jira_create_issue = "jira.create_issue"
     slack_post_message = "slack.post_message"
     gmail_apply_label = "gmail.apply_label"
@@ -128,7 +130,7 @@ class EmailContext(BaseModel):
     labels: list[str] = Field(default_factory=list)
 
 
-class StepStatus(str, Enum):
+class StepStatus(StrEnum):
     planned = "planned"
     previewing = "previewing"
     running = "running"
@@ -176,7 +178,7 @@ class RiskSummary(BaseModel):
     level: Literal["low", "medium", "high"]
 
 
-class RunStatus(str, Enum):
+class RunStatus(StrEnum):
     no_match = "no_match"
     matched = "matched"
     planned = "planned"

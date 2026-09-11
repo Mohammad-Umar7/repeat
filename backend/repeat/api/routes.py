@@ -25,7 +25,11 @@ router = APIRouter()
 async def health():
     d = get_deps()
     checks = {}
-    for name, client in (("jira", d.integrations.jira), ("slack", d.integrations.slack), ("gmail", d.integrations.gmail)):
+    for name, client in (
+        ("jira", d.integrations.jira),
+        ("slack", d.integrations.slack),
+        ("gmail", d.integrations.gmail),
+    ):
         ok, detail = await client.health()
         checks[name] = {"ok": ok, "detail": detail}
     return {
@@ -115,7 +119,9 @@ async def decide_demonstration(demo_id: str, body: DecisionBody):
 async def transcribe(audio: UploadFile = File(...)):
     d = get_deps()
     if not (d.settings.repeat_narration_enabled and d.llm.name == "openai"):
-        raise HTTPException(409, "narration is disabled: set OPENAI_API_KEY to enable transcription")
+        raise HTTPException(
+            409, "narration is disabled: set OPENAI_API_KEY to enable transcription"
+        )
     data = await audio.read()
     if len(data) < 1024:
         return {"text": ""}

@@ -43,7 +43,9 @@ def teach_graph():
     g.add_node("record", nodes.record_workflow)
     g.add_node("failure_gate", _teach_gate_with_origin)
     g.add_edge(START, "observe")
-    g.add_conditional_edges("observe", _teach_after("generalize"), ["generalize", "failure_gate", END])
+    g.add_conditional_edges(
+        "observe", _teach_after("generalize"), ["generalize", "failure_gate", END]
+    )
     g.add_conditional_edges("generalize", _teach_after("record"), ["record", "failure_gate", END])
     g.add_conditional_edges("record", _teach_after(END), ["failure_gate", END])
     g.add_conditional_edges(

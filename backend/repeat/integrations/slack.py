@@ -79,7 +79,12 @@ class LiveSlackClient(SlackClient):
     async def verify_message(self, channel_id: str, ts: str) -> VerifyResult:
         try:
             d = await self._call(
-                "conversations.history", channel=channel_id, latest=ts, oldest=ts, inclusive=True, limit=1
+                "conversations.history",
+                channel=channel_id,
+                latest=ts,
+                oldest=ts,
+                inclusive=True,
+                limit=1,
             )
         except IntegrationError as e:
             return VerifyResult(False, str(e))

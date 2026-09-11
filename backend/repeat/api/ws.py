@@ -23,7 +23,7 @@ async def events(ws: WebSocket):
         while True:
             try:
                 event = await asyncio.wait_for(q.get(), timeout=20)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await ws.send_json({"type": "ping", "payload": {}})
                 continue
             await ws.send_json(event)

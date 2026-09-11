@@ -27,7 +27,9 @@ async def test_observe_collapses_repeated_inputs_and_attaches_narration(deps):
     from repeat.agent.nodes import observe
 
     t0 = 1_000_000.0
-    ev = lambda kind, dt, **kw: RecordedEvent(kind=kind, ts=t0 + dt, url="u", title="t", app="jira", **kw)  # noqa: E731
+    ev = lambda kind, dt, **kw: RecordedEvent(
+        kind=kind, ts=t0 + dt, url="u", title="t", app="jira", **kw
+    )
     demo = Demonstration(
         events=[
             ev(EventKind.input, 0, field_label="Summary", value="Che"),
