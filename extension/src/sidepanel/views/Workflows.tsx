@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@shared/api";
 import type { Backend } from "../hooks/useBackend";
 import { WorkflowCard } from "../components/WorkflowCard";
-import { Banner, EmptyState, Kbd } from "../components/ui";
+import { Banner, EmptyState, Kbd, fmtDuration } from "../components/ui";
 
 interface Props {
   b: Backend;
@@ -10,6 +11,19 @@ interface Props {
 }
 
 export function Workflows({ b, onTeach, onRunStarted }: Props) {
+  const [saved, setSaved] = useState<{ seconds: number; runs: number } | null>(null);
+  const runStatus = b.runState.run?.status;
+  useEffect(() => {
+    if (b.online === false) return;
+    api
+      .runs(50)
+      .then((rs) => {
+        const done = rs.filter((r) => r.status === "completed");
+        setSaved({ seconds: done.reduce((a, r) => a + (r.seconds_saved || 0), 0), runs: done.length });
+      })
+      .catch(() => setSaved(null));
+  }, [runStatus, b.online, b.workflows.length]);
+
   const run = async (id: string) => {
     const s = await b.checkInbox(id);
     if (s?.run) onRunStarted();
@@ -55,6 +69,12 @@ export function Workflows({ b, onTeach, onRunStarted }: Props) {
   return (
     <>
       {b.error && <Banner tone="bad" action={<button className="btn sm" onClick={() => b.setError(null)}>Dismiss</button>}>{b.error}</Banner>}
+      {saved && saved.runs > 0 && (
+        <div className="row small muted fade-in" aria-live="polite">
+          <span className="ok" style={{ fontWeight: 600 }}>{fmtDuration(saved.seconds)} saved</span>
+          <span>across {saved.runs} run{saved.runs === 1 ? "" : "s"}</span>
+        </div>
+      )}
       {b.workflows.map((wf, i) => (
         <WorkflowCard
           key={wf.id}

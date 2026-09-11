@@ -51,6 +51,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
   let hideTimer: ReturnType<typeof setTimeout> | null = null;
   let riskTimer: ReturnType<typeof setTimeout> | null = null;
   let fillEls: HTMLElement[] = [];
+  let fillNodes: HTMLElement[] = []; // host fields each fill is drawn over, same order
   let anchor: DOMRect | null = null;
   const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
   addEventListener("mousemove", (e) => ((mouse.x = e.clientX), (mouse.y = e.clientY)), { passive: true });
@@ -108,6 +109,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
   function clearFills(fade = false): void {
     const old = fillEls;
     fillEls = [];
+    fillNodes = [];
     if (fade) {
       old.forEach((f) => f.classList.add("out"));
       setTimeout(() => old.forEach((f) => f.remove()), 200);
@@ -203,6 +205,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
         f.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${Math.max(r.height, 30)}px`;
         fillsRoot.appendChild(f);
         fillEls.push(f);
+        fillNodes.push(node);
         setTimeout(() => f.classList.add("on"), 60 * i);
       });
       anchor = last;
@@ -361,8 +364,21 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
     void decide(act as RunDecision);
   });
 
-  // Keep fills aligned if the page scrolls or resizes while previewing.
-  const realign = () => { if (interrupt?.type === "step_gate" && visible) void renderStepPreview(interrupt.step_index ?? 0); };
+  // Keep fills aligned if the page scrolls or resizes while previewing: move, never re-render.
+  const realign = () => {
+    if (!visible || fillNodes.length === 0) return;
+    fillEls.forEach((f, i) => {
+      const node = fillNodes[i];
+      if (!node || !node.isConnected) return;
+      const r = node.getBoundingClientRect();
+      f.style.left = `${r.left}px`;
+      f.style.top = `${r.top}px`;
+      f.style.width = `${r.width}px`;
+      f.style.height = `${Math.max(r.height, 30)}px`;
+      if (i === fillNodes.length - 1) anchor = r;
+    });
+    if (pill.classList.contains("on")) place(pill, anchor);
+  };
   addEventListener("scroll", realign, { passive: true, capture: true });
   addEventListener("resize", realign, { passive: true });
 

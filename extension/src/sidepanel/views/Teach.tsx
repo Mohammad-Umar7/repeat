@@ -174,6 +174,7 @@ export function Teach({ b, onLearned }: Props) {
         e.preventDefault();
         if (phase === "idle") void start();
         else if (phase === "recording") void done();
+        else if (phase === "learned") onLearned();
       }
       if (e.key === "Escape" && phase === "recording") { e.preventDefault(); void cancel(); }
     };

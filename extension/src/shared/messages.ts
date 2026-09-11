@@ -28,7 +28,6 @@ export type Msg =
   | { type: "run.undoOne"; runId: string }
   | { type: "ghost.show"; run: Run; interrupt: Interrupt | null }
   | { type: "ghost.hide" }
-  | { type: "ghost.navigate"; url: string }
   // ── panel ────────────────────────────────────────────────────────────
   | { type: "panel.open" }
   | { type: "panel.setView"; view: "workflows" | "run" | "teach" }
