@@ -1,5 +1,7 @@
 # REPEAT
 
+[![ci](https://github.com/Mohammad-Umar7/repeat/actions/workflows/ci.yml/badge.svg)](https://github.com/Mohammad-Umar7/repeat/actions/workflows/ci.yml)
+
 **Show it once. Then just press Tab.**
 
 REPEAT is an AI agent that lives inside the browser where work already happens. It is not a
@@ -102,6 +104,10 @@ Prerequisites: Python 3.11+, Node 20+, Chrome 120+.
    ```powershell
    .\scripts\reset-demo.ps1       # Windows
    ```
+
+Or do steps 2 to 5 in one go with `./scripts/dev.sh` (macOS/Linux/Git Bash) or
+`.\scripts\dev.ps1` (Windows): it creates `backend/.env` in demo mode if missing, builds the
+extension and starts the backend.
 
 `.env.example` documents every key.
 
