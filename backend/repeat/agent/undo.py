@@ -34,6 +34,9 @@ async def _save(run: Run, event: str, extra: dict | None = None) -> None:
     d = get_deps()
     await d.store.save_run(run)
     await d.bus.publish(event, {"run": run.model_dump(mode="json"), **(extra or {})})
+    step = extra.get("step_index") if extra else None
+    where = f" step={step + 1} {run.steps[step].action}" if isinstance(step, int) else ""
+    log.info("%s %s status=%s%s", run.id, event, run.status, where)
 
 
 def committed_indices(run: Run) -> list[int]:

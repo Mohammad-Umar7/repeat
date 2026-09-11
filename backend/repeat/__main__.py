@@ -12,6 +12,7 @@ def main() -> None:
         host="127.0.0.1",
         port=s.repeat_port,
         log_level=s.repeat_log_level.lower(),
+        access_log=s.repeat_log_level == "DEBUG",
         reload=False,
     )
 
