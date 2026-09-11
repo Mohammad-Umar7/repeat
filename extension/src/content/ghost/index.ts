@@ -60,6 +60,26 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
   const appTag = (app: string) => `<span class="app" aria-hidden="true">${app === "jira" ? "J" : app === "slack" ? "S" : app === "gmail" ? "G" : "•"}</span>`;
 
+  /** Ghost text must stay legible on light and dark host pages alike. */
+  function isLightSurface(node: HTMLElement): boolean {
+    let e: HTMLElement | null = node;
+    while (e) {
+      const bg = getComputedStyle(e).backgroundColor;
+      const m = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+      if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+        const lum = (0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3]) / 255;
+        return lum > 0.6;
+      }
+      e = e.parentElement;
+    }
+    return true;
+  }
+
+  // Debug hook for harness pages (the shadow root is closed on purpose).
+  (window as any).__repeatGhostDebug = () => ({
+    visible, interrupt: interrupt?.type ?? null, fills: fillEls.map((f) => `${f.className} | ${f.style.cssText}`),
+  });
+
   function moveCursor(x: number, y: number): void {
     cursor.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
     cursor.classList.add("on");
@@ -177,6 +197,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
         const r = node.getBoundingClientRect();
         last = r;
         const f = el("div", "fill");
+        if (isLightSurface(node)) f.classList.add("light");
         f.textContent = step.inputs[t.key] ?? "";
         f.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${Math.max(r.height, 30)}px`;
         fillsRoot.appendChild(f);

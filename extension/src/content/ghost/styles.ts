@@ -64,7 +64,9 @@ kbd{font:600 10.5px/1 ui-monospace,Menlo,Consolas,monospace;color:#c9ccd2;backgr
   border-radius:6px;box-shadow:inset 0 0 0 1px rgba(34,211,238,.45),0 0 14px rgba(34,211,238,.18);
   background:rgba(34,211,238,.05);opacity:0;transition:opacity 180ms ease-out,color 120ms ease-out,box-shadow 120ms ease-out}
 .fill.on{opacity:1}
+.fill.light{color:#6b7280;background:rgba(34,211,238,.08)}
 .fill.commit{color:#e7e8ea;box-shadow:inset 0 0 0 1px rgba(34,211,238,.9),0 0 18px rgba(34,211,238,.35)}
+.fill.light.commit{color:#111827}
 .fill.out{opacity:0}
 
 /* preview card when the app's DOM is not fillable: same ghost styling, rendered in the overlay */
