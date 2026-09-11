@@ -1,6 +1,6 @@
 [project]
 name = "repeat-backend"
-version = "0.1.0"
+version = "0.2.0"
 description = "REPEAT local agent service: LangGraph agent, SQLite store, Gmail/Jira/Slack integrations."
 requires-python = ">=3.11"
 dependencies = [

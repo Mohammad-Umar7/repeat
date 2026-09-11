@@ -50,3 +50,6 @@ All times are local (Asia/Karachi, UTC+5). Net-new build; nothing imported from 
 - 15:20 Polish: cumulative time-saved counter on Workflows, Enter on the learned card, ghost
   fills reposition on scroll without re-rendering, clickable shortcut hints in the pills,
   `scripts/dev.*` one-command start, `docs/demo-checklist.md`. CI green on main.
+- 16:30 Polish round → 0.2.0: `no_match` status so lunch invites never hide a real run;
+  ghost error pill with retry; reduced-motion support; node-transition logging; build-time
+  backend port; ruff lint/format + CI; 23 tests; README run guide; CHANGELOG.
