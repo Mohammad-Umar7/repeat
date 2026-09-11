@@ -77,6 +77,13 @@ def _after(node_ok: str):
 
 
 def _after_approval(state: RunState) -> str:
+    """Step mode previews every step, including the first, before it commits."""
+    if state.get("stopped"):
+        return END
+    return "step_gate" if state.get("mode") == "step" else "execute"
+
+
+def _after_step_gate(state: RunState) -> str:
     return END if state.get("stopped") else "execute"
 
 
@@ -126,8 +133,8 @@ def run_graph():
     g.add_conditional_edges(
         "assess_risk", _after("await_approval"), ["await_approval", "failure_gate", END]
     )
-    g.add_conditional_edges("await_approval", _after_approval, ["execute", END])
-    g.add_conditional_edges("step_gate", _after_approval, ["execute", END])
+    g.add_conditional_edges("await_approval", _after_approval, ["step_gate", "execute", END])
+    g.add_conditional_edges("step_gate", _after_step_gate, ["execute", END])
     g.add_conditional_edges("execute", _after("verify"), ["verify", "failure_gate", END])
     g.add_conditional_edges("verify", _after("record"), ["record", "failure_gate", END])
     g.add_conditional_edges("record", _after_record, ["step_gate", "execute", END])

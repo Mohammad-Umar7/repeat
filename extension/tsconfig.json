@@ -17,5 +17,5 @@
     "baseUrl": ".",
     "paths": { "@shared/*": ["src/shared/*"] }
   },
-  "include": ["src", "build.mjs", "vite.config.ts"]
+  "include": ["src"]
 }

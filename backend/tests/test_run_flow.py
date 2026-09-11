@@ -25,8 +25,16 @@ async def test_full_run_step_mode_then_undo(deps):
     assert "Jira" in risk["blast_radius"]
     run_id = res["run"]["id"]
 
-    # Tab: approve in step mode -> first step executes, then parks at step 2 gate
+    # Tab: approve in step mode -> step 1 is previewed (ghost fill) before it commits
     res = await runner.resume_run(run_id, "step")
+    assert res["interrupt"]["type"] == "step_gate"
+    assert res["interrupt"]["step_index"] == 0
+    run = Run.model_validate(res["run"])
+    assert run.steps[0].status == StepStatus.previewing
+    assert run.steps[0].inputs["summary"] == email.subject
+
+    # Tab again: commit step 1, park at step 2 preview
+    res = await runner.resume_run(run_id, "commit")
     assert res["interrupt"]["type"] == "step_gate"
     assert res["interrupt"]["step_index"] == 1
     run = Run.model_validate(res["run"])
@@ -81,6 +89,8 @@ async def test_failure_pauses_then_retry_succeeds(deps):
     jira.fail_next = "Jira returned 503 while creating the issue."
     res = await runner.start_run(wf, DEMO_EMAILS[0])
     res = await runner.resume_run(res["run"]["id"], "step")
+    assert res["interrupt"]["type"] == "step_gate"
+    res = await runner.resume_run(res["run"]["id"], "commit")
     assert res["interrupt"]["type"] == "failure"
     assert res["interrupt"]["options"] == ["retry", "skip", "stop"]
     assert res["run"]["status"] == "paused"

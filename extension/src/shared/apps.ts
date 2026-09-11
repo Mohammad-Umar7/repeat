@@ -36,7 +36,7 @@ export function readOpenGmailMessage(): EmailContext | null {
   const senders = document.querySelectorAll("span.gD[email], span[email][name]");
   const senderEl = senders[senders.length - 1] as HTMLElement | undefined;
   const sender = senderEl?.getAttribute("email") || "";
-  const senderName = senderEl?.getAttribute("name") || text(senderEl) || null;
+  const senderName = senderEl?.getAttribute("name") || text(senderEl ?? null) || null;
   const bodies = document.querySelectorAll("div.a3s.aiL, div.a3s");
   const bodyEl = bodies[bodies.length - 1];
   const body = (bodyEl?.textContent || "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
