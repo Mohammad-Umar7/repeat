@@ -126,6 +126,29 @@ async def test_failure_skip_continues(deps):
     assert run.status == RunStatus.completed
 
 
+async def test_real_gmail_email_runs_against_sandbox(deps):
+    """Mixed mode: a message opened in a real Gmail tab, backend fully sandboxed."""
+    from repeat.models import EmailContext
+
+    wf = await _seeded(deps)
+    email = EmailContext(
+        id="18f2a9c0ffee1234",  # a real-looking Gmail message id the sandbox has never seen
+        subject="Bug: checkout button is broken on Safari",
+        sender="someone@example.com",
+        sender_name="Someone",
+        body="Steps to reproduce: add item, click checkout. Expected payment page. Actual nothing.",
+        labels=[],
+    )
+    res = await runner.start_run(wf, email)
+    assert res["interrupt"]["type"] == "approval"
+    res = await runner.resume_run(res["run"]["id"], "all")
+    run = Run.model_validate(res["run"])
+    assert run.status == RunStatus.completed
+    assert [s.status for s in run.steps] == [StepStatus.done] * 3
+    run = await undo.undo_to(run, 0)
+    assert run.status == RunStatus.reverted
+
+
 async def test_undo_one_steps_back_single(deps):
     wf = await _seeded(deps)
     res = await runner.start_run(wf, DEMO_EMAILS[0])

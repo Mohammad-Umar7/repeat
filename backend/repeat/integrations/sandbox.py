@@ -191,11 +191,25 @@ class SandboxGmail(GmailClient):
     async def get_email(self, message_id: str) -> EmailContext | None:
         return self.emails.get(message_id)
 
+    def _adopt(self, message_id: str) -> EmailContext:
+        """An email opened in a real Gmail tab while the backend is sandboxed: track it so
+        labelling and undo work end to end without a Gmail token."""
+        email = self.emails.get(message_id)
+        if email is None:
+            email = EmailContext(
+                id=message_id,
+                thread_id=message_id,
+                subject="(opened in Gmail)",
+                sender="",
+                body="",
+                labels=["INBOX"],
+            )
+            self.emails[message_id] = email
+        return email
+
     async def apply_label(self, message_id: str, label: str) -> ActionResult:
         await asyncio.sleep(LATENCY)
-        email = self.emails.get(message_id)
-        if not email:
-            raise IntegrationError("That email no longer exists in the inbox.", retryable=False)
+        email = self._adopt(message_id)
         if label not in email.labels:
             email.labels.append(label)
         return ActionResult(
