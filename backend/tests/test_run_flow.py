@@ -79,8 +79,20 @@ async def test_no_match_for_lunch_email(deps):
     wf = await _seeded(deps)
     res = await runner.start_run(wf, DEMO_EMAILS[2])
     assert res["interrupt"] is None
-    assert res["run"]["status"] == "stopped"
+    assert res["run"]["status"] == "no_match"
     assert res["run"]["match_confidence"] < 0.6
+
+
+async def test_no_match_never_buries_the_latest_real_run(deps):
+    wf = await _seeded(deps)
+    res = await runner.start_run(wf, DEMO_EMAILS[0])
+    res = await runner.resume_run(res["run"]["id"], "all")
+    assert res["run"]["status"] == "completed"
+    await runner.start_run(wf, DEMO_EMAILS[2])  # lunch invite opened afterwards
+    latest = await deps.store.latest_run()
+    assert latest is not None and latest.status == RunStatus.completed
+    assert len(await deps.store.list_runs()) == 1
+    assert len(await deps.store.list_runs(include_no_match=True)) == 2
 
 
 async def test_failure_pauses_then_retry_succeeds(deps):

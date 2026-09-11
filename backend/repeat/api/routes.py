@@ -176,7 +176,7 @@ async def match_email(body: MatchBody):
     for wf in workflows:
         res = await runner.start_run(wf, email)
         run = res["run"] or {}
-        if run.get("status") != "stopped":
+        if run.get("status") != "no_match":
             return res
         if best is None or run.get("match_confidence", 0) > best["run"].get("match_confidence", 0):
             best = res
@@ -184,8 +184,9 @@ async def match_email(body: MatchBody):
 
 
 @router.get("/runs")
-async def list_runs(limit: int = 20):
-    return [r.model_dump(mode="json") for r in await get_deps().store.list_runs(limit)]
+async def list_runs(limit: int = 20, include_no_match: bool = False):
+    runs = await get_deps().store.list_runs(limit, include_no_match=include_no_match)
+    return [r.model_dump(mode="json") for r in runs]
 
 
 @router.get("/runs/latest")

@@ -123,6 +123,7 @@ export function useBackend() {
         }
         if (e.type.startsWith("workflow.") || e.type === "demo.reset") void refreshWorkflows();
         if (e.type === "demo.reset") setRunState({ run: null, interrupt: null, finished: true });
+        if (e.type === "run.no_match") return; // nothing happened; keep showing the last real run
         if (e.type.startsWith("run.") || e.type.startsWith("step.")) {
           const run = e.payload.run;
           if (run) {
@@ -211,6 +212,10 @@ export function useBackend() {
         const s = await send<RunState | { error: string } | null>({ type: "email.opened", email, workflowId });
         if (s && "error" in s) throw new ApiError(500, s.error);
         const state = (s as RunState) ?? (await api.latestRun());
+        if (state.run?.status === "no_match") {
+          setError(`No workflow matches "${email.subject}". ${state.run.match_reason}`);
+          return state;
+        }
         setRunState(state);
         return state;
       }),

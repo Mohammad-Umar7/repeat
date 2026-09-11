@@ -10,6 +10,7 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
+  no_match: "No match",
   matched: "Matched",
   planned: "Planned",
   awaiting_approval: "Awaiting approval",

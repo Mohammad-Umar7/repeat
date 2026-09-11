@@ -176,14 +176,16 @@ async def match(state: RunState) -> RunState:
     try:
         m: MatchOutput = await d.llm.complete_structured(system=system, user=user, schema=MatchOutput)
     except LLMError as e:
-        run.status = RunStatus.stopped
+        run.status = RunStatus.no_match
         run.match_reason = f"Could not evaluate this email ({e})."
         await _save(run, "run.no_match")
         return {"matched": False, "run": run, "stopped": True}
     run.match_confidence = m.confidence
     run.match_reason = m.reason
     if not m.matches:
-        run.status = RunStatus.stopped
+        # Kept in the store for the "why did nothing happen" answer, but hidden from the
+        # panel's latest-run view so a lunch invite never buries a real run.
+        run.status = RunStatus.no_match
         await _save(run, "run.no_match")
         return {"matched": False, "run": run, "stopped": True}
     run.status = RunStatus.matched

@@ -70,6 +70,16 @@ async def test_rename_and_delete_workflow(deps):
         assert r.status_code == 404  # nothing learned: the ghost stays silent
 
 
+async def test_match_lunch_email_reports_no_match(deps):
+    await seed_demo()
+    async with await _client() as c:
+        state = (await c.post("/runs/match", json={"email_id": "demo-mail-003"})).json()
+        assert state["run"]["status"] == "no_match"
+        assert state["finished"] is True
+        assert (await c.get("/runs/latest")).json()["run"] is None
+        assert len((await c.get("/runs?include_no_match=true")).json()) == 1
+
+
 async def test_fault_injection_produces_paused_state(deps):
     await seed_demo()
     async with await _client() as c:

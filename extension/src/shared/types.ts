@@ -113,6 +113,7 @@ export interface RiskSummary {
 }
 
 export type RunStatus =
+  | "no_match"
   | "matched"
   | "planned"
   | "awaiting_approval"

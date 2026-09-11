@@ -93,5 +93,9 @@ async def _run_result(run_id: str) -> dict[str, Any]:
     return {
         "run": run.model_dump(mode="json") if run else None,
         "interrupt": _pending_interrupt(snap),
-        "finished": bool(run and run.status in (RunStatus.completed, RunStatus.stopped, RunStatus.failed)),
+        "finished": bool(
+            run
+            and run.status
+            in (RunStatus.completed, RunStatus.stopped, RunStatus.failed, RunStatus.no_match)
+        ),
     }

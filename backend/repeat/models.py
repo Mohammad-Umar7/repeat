@@ -177,6 +177,7 @@ class RiskSummary(BaseModel):
 
 
 class RunStatus(str, Enum):
+    no_match = "no_match"
     matched = "matched"
     planned = "planned"
     awaiting_approval = "awaiting_approval"

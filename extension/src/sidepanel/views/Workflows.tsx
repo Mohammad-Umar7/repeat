@@ -26,7 +26,7 @@ export function Workflows({ b, onTeach, onRunStarted }: Props) {
 
   const run = async (id: string) => {
     const s = await b.checkInbox(id);
-    if (s?.run) onRunStarted();
+    if (s?.run && s.run.status !== "no_match") onRunStarted();
   };
 
   // Enter runs the first workflow when nothing else has focus.

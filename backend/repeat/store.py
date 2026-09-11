@@ -122,9 +122,10 @@ class Store:
         row = await cur.fetchone()
         return Run.model_validate_json(row["payload"]) if row else None
 
-    async def list_runs(self, limit: int = 20) -> list[Run]:
+    async def list_runs(self, limit: int = 20, *, include_no_match: bool = False) -> list[Run]:
+        where = "" if include_no_match else "WHERE status != 'no_match'"
         cur = await self.db.execute(
-            "SELECT payload FROM runs ORDER BY created_at DESC LIMIT ?", (limit,)
+            f"SELECT payload FROM runs {where} ORDER BY created_at DESC LIMIT ?", (limit,)
         )
         return [Run.model_validate_json(r["payload"]) for r in await cur.fetchall()]
 
@@ -135,7 +136,7 @@ class Store:
     async def find_run_for_email(self, email_id: str) -> Run | None:
         """Prevents the ghost pill from re-offering an email that already has a live run."""
         cur = await self.db.execute(
-            "SELECT payload FROM runs WHERE status NOT IN ('stopped','failed','reverted')"
+            "SELECT payload FROM runs WHERE status NOT IN ('stopped','failed','reverted','no_match')"
             " ORDER BY created_at DESC LIMIT 50"
         )
         for r in await cur.fetchall():

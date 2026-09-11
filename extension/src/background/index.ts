@@ -80,7 +80,7 @@ async function pushGhost(state: RunState, senderTab?: number | null): Promise<vo
 async function onEmailOpened(email: EmailContext, tabId: number | null, workflowId?: string): Promise<RunState | { error: string } | null> {
   try {
     const state = await api.match({ email, workflow_id: workflowId });
-    if (!state.run || state.run.status === "stopped") return state; // no match: ghost stays silent
+    if (!state.run || state.run.status === "no_match") return state; // no match: ghost stays silent
     await pushGhost(state, tabId);
     return state;
   } catch (e) {
