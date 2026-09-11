@@ -47,3 +47,6 @@ All times are local (Asia/Karachi, UTC+5). Net-new build; nothing imported from 
 - 14:55 Ghost overlay verified on a light host page (fake Jira create dialog harness):
   ghost fills over Summary and Description, pill anchored below the field, approval pill,
   risk card. Added adaptive text contrast for light surfaces.
+- 15:20 Polish: cumulative time-saved counter on Workflows, Enter on the learned card, ghost
+  fills reposition on scroll without re-rendering, clickable shortcut hints in the pills,
+  `scripts/dev.*` one-command start, `docs/demo-checklist.md`. CI green on main.
