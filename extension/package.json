@@ -1,0 +1,26 @@
+{
+  "name": "repeat-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "REPEAT Chrome extension: recorder, ghost overlay and side panel.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs && vite build",
+    "dev": "node build.mjs --watch & vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.270",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "esbuild": "^0.23.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.3"
+  }
+}
