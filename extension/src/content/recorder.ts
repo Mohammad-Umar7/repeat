@@ -39,6 +39,9 @@ import type { RecordedEvent, EventKind } from "@shared/types";
     counter.textContent = String(count);
   }
 
+  // Debug hook for harness pages (the badge's shadow root is closed on purpose).
+  (window as any).__repeatRecorderDebug = () => ({ recording, app, url: location.href });
+
   // ── emit ─────────────────────────────────────────────────────────────
   function base(kind: EventKind): RecordedEvent {
     return { kind, ts: Date.now(), url: location.href, title: document.title, app };
@@ -143,9 +146,25 @@ import type { RecordedEvent, EventKind } from "@shared/types";
 
   // ── state sync ───────────────────────────────────────────────────────
   onMessage((msg) => {
-    if (msg.type === "teach.state") setRecording(msg.status === "recording", msg.count);
+    if (msg.type === "teach.state") {
+      setRecording(msg.status === "recording", msg.count);
+      return { ok: true };
+    }
+    return undefined;
   });
-  void send<{ status: string; count: number }>({ type: "teach.status" }).then((s) => {
-    if (s) setRecording(s.status === "recording", s.count);
-  });
+
+  /** Ask the worker whether a teach session is already running on this tab.
+   *  A tab opened or navigated mid-session gets no broadcast, so this query is the only
+   *  way it learns to record. Retry a few times: an idle MV3 worker can miss the first. */
+  async function syncStatus(): Promise<void> {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const s = await send<{ status: string; count: number } | undefined>({ type: "teach.status" });
+      if (s && typeof s.status === "string") {
+        setRecording(s.status === "recording", s.count);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+    }
+  }
+  void syncStatus();
 })();

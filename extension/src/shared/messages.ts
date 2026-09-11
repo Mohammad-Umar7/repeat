@@ -72,13 +72,17 @@ export function onMessage(
       result = handler(msg, sender);
     } catch (e) {
       sendResponse({ error: String(e) });
-      return false;
+      return true;
     }
+    // Every page with a listener receives every message. A handler that returns undefined
+    // is saying "not mine": stay silent so the listener that owns this message answers it.
+    // Answering with undefined here would race, and win, against the service worker.
+    if (result === undefined) return false;
     if (result instanceof Promise) {
       result.then(sendResponse, (e) => sendResponse({ error: String(e) }));
       return true; // keep the channel open for the async response
     }
     sendResponse(result);
-    return false;
+    return true;
   });
 }
