@@ -10,7 +10,7 @@ from pathlib import Path
 
 import aiosqlite
 
-from .models import Demonstration, Run, Workflow
+from .models import Demonstration, Run, RunStatus, StepStatus, Workflow
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS demonstrations (
@@ -143,6 +143,26 @@ class Store:
             if run.email.id == email_id:
                 return run
         return None
+
+    async def stop_orphaned_runs(self, reason: str) -> int:
+        """Graph state lives in memory; after a restart, in-flight runs can no longer be
+        resumed. Mark them stopped so the panel never shows a dead 'running' state.
+        Committed steps keep their undo tokens and remain reversible."""
+        cur = await self.db.execute(
+            "SELECT payload FROM runs WHERE status IN"
+            " ('matched','planned','awaiting_approval','running','paused')"
+        )
+        n = 0
+        for r in await cur.fetchall():
+            run = Run.model_validate_json(r["payload"])
+            for step in run.steps:
+                if step.status.value in ("previewing", "running", "verifying"):
+                    step.status = StepStatus.planned
+            run.status = RunStatus.stopped
+            run.pause_reason = reason
+            await self.save_run(run)
+            n += 1
+        return n
 
     # ── demo reset ────────────────────────────────────────────────────
 

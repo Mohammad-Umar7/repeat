@@ -190,9 +190,11 @@ async def list_runs(limit: int = 20):
 
 @router.get("/runs/latest")
 async def latest_run():
+    """200 with a null run when there is none: the panel polls this on open and a 404
+    would show up as a console error, which the demo path must never produce."""
     run = await get_deps().store.latest_run()
     if not run:
-        raise HTTPException(404, "no runs yet")
+        return {"run": None, "interrupt": None, "finished": True}
     return await runner.run_state(run.id)
 
 

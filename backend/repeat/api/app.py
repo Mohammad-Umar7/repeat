@@ -29,6 +29,11 @@ async def lifespan(app: FastAPI):
     store = await Store(s.repeat_db_path).open()
     deps = Deps(settings=s, store=store, bus=EventBus(), integrations=get_integrations(), llm=get_llm())
     set_deps(deps)
+    orphaned = await store.stop_orphaned_runs(
+        "Interrupted by a backend restart. Committed steps can still be undone."
+    )
+    if orphaned:
+        log.info("stopped %d orphaned run(s) from a previous session", orphaned)
     if s.repeat_seed_demo and not await store.list_workflows():
         await seed_demo(wipe=False)
         log.info("seeded demo workflow")

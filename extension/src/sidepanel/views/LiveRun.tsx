@@ -233,7 +233,7 @@ export function LiveRun({ b, onGoWorkflows }: Props) {
       {(run.status === "stopped") && (
         <Banner>
           <b>Stopped.</b> {run.pause_reason || "Nothing else was changed."}
-          {committed > 0 && " Committed steps can still be undone above."}
+          {committed > 0 && !/undone/i.test(run.pause_reason || "") && " Committed steps can still be undone above."}
         </Banner>
       )}
       {(run.status === "running" && !interrupt) && (

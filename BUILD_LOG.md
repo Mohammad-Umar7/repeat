@@ -25,3 +25,15 @@ All times are local (Asia/Karachi, UTC+5). Net-new build; nothing imported from 
   verification. 6 end-to-end tests green. HTTP + WebSocket API. `scripts/reset-demo`.
   - DECISION: match/plan/assess_risk run the mock provider when no OPENAI_API_KEY is
     set, so the demo path has zero network dependency. With a key, OpenAI is used.
+- 13:30 Extension Phase 1+2: MV3 scaffold (esbuild for worker/content scripts, Vite for
+  the panel), recorder content script (copy/paste/input/click/navigate + Gmail open
+  detection), service worker hub (teach session, match on email open, ghost steering
+  between tabs, WS relay), shadow-DOM ghost overlay (cursor glide 200ms, pill, risk card
+  shown once per run for 2 s, ghost fills with 60 ms stagger, 120 ms commit settle,
+  preview-card fallback, Tab/⇧Tab/Esc/Enter/S keys), React side panel with exactly
+  three views. Verified the full demo path in a chrome-shim harness: approval → step
+  previews (Slack draft shows the real DEMO-142 key) → completed + time saved → slider
+  undo with verified reverted badges → teach → learned card.
+  - FIX: runs left in-flight when the backend restarts are marked stopped on boot
+    (graph state is in memory); committed steps stay undoable.
+  - FIX: step previews now re-fill templates with variables produced by earlier steps.

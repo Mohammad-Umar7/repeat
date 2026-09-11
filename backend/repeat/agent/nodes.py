@@ -270,6 +270,9 @@ async def step_gate(state: RunState) -> RunState:
     run = state["run"]
     idx = run.current_step
     step = run.steps[idx]
+    # Preview with everything known so far: earlier steps may have produced {issue_key}.
+    wf_step = next(s for s in state["workflow"].steps if s.id == step.workflow_step_id)
+    step.inputs = {k: fill_template(t, run.variables) for k, t in wf_step.fields.items()}
     step.status = StepStatus.previewing
     await _save(run, "step.previewing", {"step_index": idx})
     decision = interrupt(
