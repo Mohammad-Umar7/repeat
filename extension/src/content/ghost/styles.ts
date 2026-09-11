@@ -90,6 +90,10 @@ kbd{font:600 10.5px/1 ui-monospace,Menlo,Consolas,monospace;color:#c9ccd2;backgr
 .preview .foot{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;color:var(--muted)}
 .preview .foot .keys{margin-left:auto}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion: reduce){
+  .cursor,.pill,.card,.preview,.fill,.field .val{transition:none !important}
+  .spin{animation-duration:1.6s}
+}
 `;
 
 export const CURSOR_SVG = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

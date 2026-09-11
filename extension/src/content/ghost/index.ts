@@ -52,6 +52,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
   let riskTimer: ReturnType<typeof setTimeout> | null = null;
   let fillEls: HTMLElement[] = [];
   let fillNodes: HTMLElement[] = []; // host fields each fill is drawn over, same order
+  let lastError: RunDecision | null = null; // decision to retry after a backend error
   let anchor: DOMRect | null = null;
   const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
   addEventListener("mousemove", (e) => ((mouse.x = e.clientX), (mouse.y = e.clientY)), { passive: true });
@@ -309,11 +310,26 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
       pill.innerHTML = `<span class="brand">REPEAT</span><span class="spin" aria-hidden="true"></span><span class="msg">Committing…</span>`;
       place(pill, anchor);
     }
-    const state = await send<RunState>({ type: "run.decide", runId: run.id, decision: d });
-    if (state && "run" in state) apply(state);
+    const state = await send<RunState | { error: string } | undefined>({ type: "run.decide", runId: run.id, decision: d });
+    if (state && "run" in state) return apply(state);
+    renderError(
+      state && "error" in state ? state.error : "REPEAT backend is not responding. Start it with `python -m repeat`.",
+      d,
+    );
+  }
+
+  /** Error pill: what went wrong in one sentence, Enter to retry the same decision, Esc to hide. */
+  function renderError(message: string, retry: RunDecision): void {
+    fillEls.forEach((f) => f.classList.remove("commit"));
+    pill.innerHTML = `<span class="brand">REPEAT</span><span class="msg bad">${esc(message)}</span>
+      ${kbd("Enter", "retry", `retry:${retry}`)}${kbd("Esc", "hide", "hide")}`;
+    place(pill, anchor);
+    lastError = retry;
+    visible = true;
   }
 
   function apply(state: RunState): void {
+    lastError = null;
     run = state.run;
     interrupt = state.interrupt;
     render();
@@ -329,6 +345,11 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
         e.stopImmediatePropagation();
         fn();
       };
+      if (lastError) {
+        if (e.key === "Enter") return handled(() => { const d = lastError!; lastError = null; void decide(d); });
+        if (e.key === "Escape") return handled(() => { lastError = null; hideAll(); });
+        return;
+      }
       if (riskPending) {
         if (e.key === "Enter" || e.key === "Tab") return handled(confirmRisk);
         if (e.key === "Escape") return handled(() => { riskPending = null; card.classList.remove("on"); void decide("dismiss"); });
@@ -357,6 +378,8 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
     const b = (e.target as HTMLElement).closest<HTMLElement>("[data-act]");
     if (!b) return;
     const act = b.dataset.act!;
+    if (act.startsWith("retry:")) { lastError = null; return void decide(act.slice(6) as RunDecision); }
+    if (act === "hide") { lastError = null; return hideAll(); }
     if (act === "offer-step") return renderRisk("step");
     if (act === "offer-all") return renderRisk("all");
     if (act === "go") return confirmRisk();

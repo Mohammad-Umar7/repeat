@@ -214,3 +214,8 @@ kbd {
 .meter i { display: block; height: 100%; background: var(--accent); transition: width 120ms linear; }
 .fade-in { animation: fade 160ms ease-out; }
 @keyframes fade { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .spinner { animation-duration: 1.6s !important; }
+}
