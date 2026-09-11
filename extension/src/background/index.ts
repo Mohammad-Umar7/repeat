@@ -45,26 +45,38 @@ function broadcast(msg: Msg): void {
 
 let ghostTabId: number | null = null;
 
-const APP_URL_MATCH: Record<string, RegExp> = {
-  jira: /^https:\/\/[^/]+\.atlassian\.net\//,
-  slack: /^https:\/\/app\.slack\.com\//,
-  gmail: /^https:\/\/mail\.google\.com\//,
+// Most specific first. A workspace URL like myteam.slack.com is still Slack, and the
+// content scripts already run there, so the ghost must be able to steer to it too.
+const APP_URL_MATCH: Record<string, RegExp[]> = {
+  jira: [/^https:\/\/[^/]+\.atlassian\.net\//],
+  slack: [/^https:\/\/app\.slack\.com\//, /^https:\/\/[^/]+\.slack\.com\//],
+  gmail: [/^https:\/\/mail\.google\.com\//],
 };
 
-/** Find an open tab for the app the next step targets; fall back to the current ghost tab. */
+/** Is this a page our content scripts run on? The ghost can only render on those. */
+function isGhostable(url: string | undefined): boolean {
+  return !!url && Object.values(APP_URL_MATCH).some((res) => res.some((re) => re.test(url)));
+}
+
+/** Find an open tab for the app the next step targets, preferring the canonical host.
+ *  Falls back to the tab the run came from, then the active tab, so a run started from
+ *  the side panel still shows its preview somewhere the user is looking. */
 async function tabForStep(run: Run, senderTab?: number | null): Promise<number | null> {
   const step = run.steps[run.current_step];
   const app = step?.app;
-  if (app && APP_URL_MATCH[app]) {
-    const tabs = await chrome.tabs.query({});
-    const hit = tabs.find((t) => t.url && APP_URL_MATCH[app].test(t.url));
+  const tabs = await chrome.tabs.query({});
+  for (const re of (app && APP_URL_MATCH[app]) || []) {
+    const hit = tabs.find((t) => re.test(t.url || ""));
     if (hit?.id != null) {
       if (!hit.active) await chrome.tabs.update(hit.id, { active: true });
       if (hit.windowId != null) await chrome.windows.update(hit.windowId, { focused: true });
       return hit.id;
     }
   }
-  return senderTab ?? ghostTabId;
+  if (senderTab != null) return senderTab;
+  if (ghostTabId != null) return ghostTabId;
+  const active = tabs.find((t) => t.active && isGhostable(t.url)) ?? tabs.find((t) => isGhostable(t.url));
+  return active?.id ?? null;
 }
 
 async function pushGhost(state: RunState, senderTab?: number | null): Promise<void> {
