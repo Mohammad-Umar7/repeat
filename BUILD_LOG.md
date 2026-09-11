@@ -37,3 +37,13 @@ All times are local (Asia/Karachi, UTC+5). Net-new build; nothing imported from 
   - FIX: runs left in-flight when the backend restarts are marked stopped on boot
     (graph state is in memory); committed steps stay undoable.
   - FIX: step previews now re-fill templates with variables produced by earlier steps.
+- 14:40 Tests: 15 green (run graph, teach graph incl. failure gate + retry, HTTP contract,
+  fault injection → paused state). GitHub Actions CI runs pytest, tsc and the extension build.
+- 14:50 DECISION (Phase 3, CopilotKit): time-boxed and cut. The panel already has a working
+  human-in-the-loop approval via LangGraph `interrupt()` surfaced over HTTP/WS, and
+  routing that through CopilotKit's CoAgent runtime would add a Node runtime process and a
+  second transport to the demo path without changing what the judges see. Plain React panel
+  talking to FastAPI over HTTP + WebSocket ships instead, as the prompt allows.
+- 14:55 Ghost overlay verified on a light host page (fake Jira create dialog harness):
+  ghost fills over Summary and Description, pill anchored below the field, approval pill,
+  risk card. Added adaptive text contrast for light surfaces.
