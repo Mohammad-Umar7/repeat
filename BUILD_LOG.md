@@ -53,3 +53,8 @@ All times are local (Asia/Karachi, UTC+5). Net-new build; nothing imported from 
 - 16:30 Polish round → 0.2.0: `no_match` status so lunch invites never hide a real run;
   ghost error pill with retry; reduced-motion support; node-transition logging; build-time
   backend port; ruff lint/format + CI; 23 tests; README run guide; CHANGELOG.
+- 21:40 Live-browser verification pass (Playwright Chromium with the unpacked extension,
+  driven on screen). Panel run, fault/retry, teach and the in-page ghost all exercised
+  end to end against a real Slack page. Four bugs found and fixed that the shim harness
+  could not surface: the onMessage undefined-reply race, apex-domain steering, the panel
+  counting itself as a page, and no fallback tab for panel-started runs. See CHANGELOG 0.2.1.
