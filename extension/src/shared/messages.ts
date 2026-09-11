@@ -20,7 +20,7 @@ export type Msg =
   | { type: "teach.narration"; event: RecordedEvent }
   | { type: "teach.state"; status: TeachStatus; count: number; startedAt: number | null }
   // ── ghost / runs ─────────────────────────────────────────────────────
-  | { type: "email.opened"; email: EmailContext }
+  | { type: "email.opened"; email: EmailContext; workflowId?: string }
   | { type: "run.state"; state: RunState }
   | { type: "run.decide"; runId: string; decision: RunDecision }
   | { type: "run.get" }

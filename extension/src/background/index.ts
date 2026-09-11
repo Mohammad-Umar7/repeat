@@ -77,14 +77,16 @@ async function pushGhost(state: RunState, senderTab?: number | null): Promise<vo
   await sendToTab(target, { type: "ghost.show", run: state.run, interrupt: state.interrupt });
 }
 
-async function onEmailOpened(email: EmailContext, tabId: number | null): Promise<void> {
+async function onEmailOpened(email: EmailContext, tabId: number | null, workflowId?: string): Promise<RunState | { error: string } | null> {
   try {
-    const state = await api.match({ email });
-    if (!state.run || state.run.status === "stopped") return; // no match: stay silent
+    const state = await api.match({ email, workflow_id: workflowId });
+    if (!state.run || state.run.status === "stopped") return state; // no match: ghost stays silent
     await pushGhost(state, tabId);
+    return state;
   } catch (e) {
-    if (e instanceof ApiError && e.status === 404) return; // no workflows learned yet
+    if (e instanceof ApiError && e.status === 404) return null; // no workflows learned yet
     broadcast({ type: "backend.status", online: !(e instanceof ApiError && e.status === 0) });
+    return { error: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -163,8 +165,7 @@ onMessage(async (msg, sender) => {
       return { ok: true };
     }
     case "email.opened": {
-      await onEmailOpened(msg.email, tabId);
-      return { ok: true };
+      return await onEmailOpened(msg.email, tabId, (msg as { workflowId?: string }).workflowId);
     }
     case "run.get": {
       try {
