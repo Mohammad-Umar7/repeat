@@ -56,7 +56,8 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
   addEventListener("mousemove", (e) => ((mouse.x = e.clientX), (mouse.y = e.clientY)), { passive: true });
 
   // ── helpers ────────────────────────────────────────────────────────
-  const kbd = (k: string, lab: string) => `<span class="keys"><kbd>${k}</kbd><span class="kbd-lab">${lab}</span></span>`;
+  const kbd = (k: string, lab: string, act?: string) =>
+    `<button class="keys" ${act ? `data-act="${act}"` : ""} aria-label="${lab} (${k})"><kbd>${k}</kbd><span class="kbd-lab">${lab}</span></button>`;
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
   const appTag = (app: string) => `<span class="app" aria-hidden="true">${app === "jira" ? "J" : app === "slack" ? "S" : app === "gmail" ? "G" : "•"}</span>`;
 
@@ -147,7 +148,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
     card.classList.remove("on");
     moveCursor(mouse.x + 6, mouse.y + 6);
     pill.innerHTML = `<span class="brand">REPEAT</span><span class="msg">can finish this.</span>
-      ${kbd("Tab", "run")}${kbd("⇧Tab", "run all")}${kbd("Esc", "dismiss")}`;
+      ${kbd("Tab", "run", "offer-step")}${kbd("⇧Tab", "run all", "offer-all")}${kbd("Esc", "dismiss", "dismiss")}`;
     place(pill, null);
     visible = true;
   }
@@ -206,7 +207,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
       });
       anchor = last;
       pill.innerHTML = `<span class="brand">REPEAT</span><span class="msg">${title}</span>
-        ${kbd("Tab", "commit")}${kbd("⇧Tab", "run all")}${kbd("Esc", "stop")}`;
+        ${kbd("Tab", "commit", "commit")}${kbd("⇧Tab", "run all", "all")}${kbd("Esc", "stop", "stop")}`;
       place(pill, anchor);
     } else {
       // Fallback: ghost preview card in the overlay (DOM not fillable or app not open here).
@@ -216,7 +217,7 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
         <div class="head">${appTag(step.app)}<b>${title}</b><span>· ${APP_LABEL[step.app as keyof typeof APP_LABEL] ?? step.app}</span></div>
         ${rows.map((r) => `<div class="field"><div class="lab">${esc(r.label)}</div><div class="val">${esc(r.value)}</div></div>`).join("")}
         <div class="foot"><span>Preview only. Commits through the ${APP_LABEL[step.app as keyof typeof APP_LABEL] ?? step.app} API.</span>
-        ${kbd("Tab", "commit")}${kbd("Esc", "stop")}</div>`;
+        ${kbd("Tab", "commit", "commit")}${kbd("Esc", "stop", "stop")}</div>`;
       place(preview, null);
       preview.querySelectorAll<HTMLElement>(".val").forEach((v, i) => setTimeout(() => v.classList.add("on"), 60 * i));
       fillEls = Array.from(preview.querySelectorAll<HTMLElement>(".val"));
@@ -353,6 +354,8 @@ import { CURSOR_SVG, GHOST_CSS } from "./styles";
     const b = (e.target as HTMLElement).closest<HTMLElement>("[data-act]");
     if (!b) return;
     const act = b.dataset.act!;
+    if (act === "offer-step") return renderRisk("step");
+    if (act === "offer-all") return renderRisk("all");
     if (act === "go") return confirmRisk();
     if (act === "cancel") { riskPending = null; card.classList.remove("on"); return void decide("dismiss"); }
     void decide(act as RunDecision);

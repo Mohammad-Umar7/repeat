@@ -23,7 +23,9 @@ export const GHOST_CSS = `
 .pill.on{opacity:1}
 .pill .msg{overflow:hidden;text-overflow:ellipsis}
 .pill .brand{color:var(--accent);font-weight:600;letter-spacing:.06em;font-size:10.5px;margin-right:2px}
-.keys{display:inline-flex;gap:6px;margin-left:2px}
+.keys{display:inline-flex;align-items:center;gap:6px;margin-left:2px;pointer-events:auto;background:none;border:0;padding:0;cursor:pointer;font:inherit;color:inherit}
+.keys:hover kbd{border-color:#4a4e57;color:#fff}
+.keys:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 kbd{font:600 10.5px/1 ui-monospace,Menlo,Consolas,monospace;color:#c9ccd2;background:var(--bg2);
   border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:4px 6px}
 .kbd-lab{color:var(--muted);font-size:11px;margin-left:2px}
