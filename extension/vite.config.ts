@@ -12,6 +12,7 @@ export default defineConfig({
   root: resolve(__dirname, "src/sidepanel"),
   publicDir: resolve(__dirname, "public"),
   resolve: { alias: { "@shared": resolve(__dirname, "src/shared") } },
+  define: { __REPEAT_PORT__: JSON.stringify(process.env.REPEAT_PORT || "8765") },
   build: {
     outDir: resolve(__dirname, "dist"),
     emptyOutDir: false,

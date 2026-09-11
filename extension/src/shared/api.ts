@@ -11,8 +11,11 @@ import type {
   Workflow,
 } from "./types";
 
-export const BACKEND_URL = "http://127.0.0.1:8765";
-export const BACKEND_WS = "ws://127.0.0.1:8765/ws";
+declare const __REPEAT_PORT__: string; // injected at build time; see build.mjs / vite.config.ts
+
+const PORT = typeof __REPEAT_PORT__ === "string" && /^\d+$/.test(__REPEAT_PORT__) ? __REPEAT_PORT__ : "8765";
+export const BACKEND_URL = `http://127.0.0.1:${PORT}`;
+export const BACKEND_WS = `ws://127.0.0.1:${PORT}/ws`;
 
 export class ApiError extends Error {
   constructor(

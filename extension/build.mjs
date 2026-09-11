@@ -16,7 +16,10 @@ const common = {
   legalComments: "none",
   logLevel: "info",
   alias: { "@shared": resolve("src/shared") },
-  define: { "process.env.NODE_ENV": '"production"' },
+  define: {
+    "process.env.NODE_ENV": '"production"',
+    __REPEAT_PORT__: JSON.stringify(process.env.REPEAT_PORT || "8765"),
+  },
 };
 
 const entries = [
