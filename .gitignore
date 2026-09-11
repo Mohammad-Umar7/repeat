@@ -1,0 +1,28 @@
+# env / secrets
+.env
+*.env
+!.env.example
+backend/tokens/
+*.db
+*.sqlite
+*.sqlite3
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# node
+node_modules/
+extension/dist/
+extension/.vite/
+*.tsbuildinfo
+
+# os / ide
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
