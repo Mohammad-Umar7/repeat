@@ -16,6 +16,47 @@ run across every app at once.
 > timestamps; [ARCHITECTURE.md](ARCHITECTURE.md) has the LangGraph nodes, failure handling
 > and undo tokens.
 
+## Run it in 3 minutes (demo mode, no accounts needed)
+
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/Mohammad-Umar7/repeat.git
+cd repeat
+python -m pip install -r backend\requirements.txt
+.\scripts\dev.ps1
+```
+
+macOS / Linux:
+
+```bash
+git clone https://github.com/Mohammad-Umar7/repeat.git
+cd repeat
+python3 -m pip install -r backend/requirements.txt
+./scripts/dev.sh
+```
+
+That script copies `.env.example` to `backend/.env` (demo mode), builds the extension into
+`extension/dist`, and starts the backend on `http://127.0.0.1:8765`. Leave it running.
+
+Then in Chrome:
+
+1. Go to `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked**,
+   and choose the `extension/dist` folder.
+2. Click the REPEAT icon in the toolbar (pin it first if you like), or press **Alt+R**. The
+   side panel opens with the seeded workflow card.
+3. Press **Check inbox & run** on the card. The sandbox inbox's newest email is a bug report,
+   so the run is offered. Press **Tab** to step through it, watch the timeline fill with
+   green checks, then drag the undo slider back to zero.
+4. To see the ghost cursor on a real page, open any Gmail message that reads like a bug
+   report. The pill appears next to your cursor; Tab from there.
+
+Reset between takes: `.\scripts\reset-demo.ps1` or `./scripts/reset-demo.sh`.
+
+Going live (real Jira, Slack, Gmail, OpenAI) is the same, plus keys in `backend/.env` and
+`REPEAT_DEMO_MODE=false`. Every key is documented in [.env.example](.env.example). Live Gmail
+asks you to sign in once in a browser window on the first request.
+
 ## The three core experiences
 
 ### 1. Teach mode: show it once
@@ -67,9 +108,9 @@ Local-first: demonstrations, workflows and run timelines live in a SQLite file o
 machine. The only things that leave are the LLM calls needed to generalise and run a
 workflow, and calls to the official Jira, Slack and Gmail APIs when you approve a run.
 
-## Setup (under 10 steps)
+## Setup, step by step
 
-Prerequisites: Python 3.11+, Node 20+, Chrome 120+.
+Prerequisites: Python 3.11+, Node 20+, Chrome 120+. The quick start above does 2 to 5 for you.
 
 1. Clone the repo and open a terminal in it.
 2. Backend dependencies:

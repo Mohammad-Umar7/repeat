@@ -8,5 +8,6 @@ npm run build
 Pop-Location
 Write-Host ""
 Write-Host "Backend: http://127.0.0.1:8765/docs   Extension: load extension\dist unpacked in chrome://extensions"
+Write-Host "Ctrl+C stops the backend. Reset the demo any time with .\scripts\reset-demo.ps1"
 Push-Location "$root\backend"
 try { python -m repeat } finally { Pop-Location }
