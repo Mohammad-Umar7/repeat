@@ -26,3 +26,6 @@ extension/.vite/
 Thumbs.db
 .idea/
 .vscode/
+
+# local logs
+*.log
