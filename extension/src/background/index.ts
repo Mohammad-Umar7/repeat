@@ -47,9 +47,11 @@ let ghostTabId: number | null = null;
 
 // Most specific first. A workspace URL like myteam.slack.com is still Slack, and the
 // content scripts already run there, so the ghost must be able to steer to it too.
+// The subdomain is optional on purpose: the manifest's `https://*.slack.com/*` pattern
+// also covers the apex domain, so the steering must match everywhere we inject.
 const APP_URL_MATCH: Record<string, RegExp[]> = {
-  jira: [/^https:\/\/[^/]+\.atlassian\.net\//],
-  slack: [/^https:\/\/app\.slack\.com\//, /^https:\/\/[^/]+\.slack\.com\//],
+  jira: [/^https:\/\/([^/]+\.)?atlassian\.net\//],
+  slack: [/^https:\/\/app\.slack\.com\//, /^https:\/\/([^/]+\.)?slack\.com\//],
   gmail: [/^https:\/\/mail\.google\.com\//],
 };
 
@@ -147,7 +149,9 @@ chrome.alarms.onAlarm.addListener((a) => {
 // ── messages ─────────────────────────────────────────────────────────────
 
 onMessage(async (msg, sender) => {
-  const tabId = sender.tab?.id ?? null;
+  // Only a content script on a host page counts as "where the user is". The side panel
+  // is itself a tab, and steering the ghost into it would render it where nobody sees it.
+  const tabId = isGhostable(sender.url) ? (sender.tab?.id ?? null) : null;
   switch (msg.type) {
     case "teach.start": {
       await setTeach({ status: "recording", startedAt: Date.now(), events: [], narration: [] });
