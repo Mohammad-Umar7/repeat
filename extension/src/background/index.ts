@@ -86,6 +86,7 @@ async function pushGhost(state: RunState, senderTab?: number | null): Promise<vo
   if (!state.run) return;
   const terminal = ["completed", "stopped", "failed", "reverted", "partially_reverted"].includes(state.run.status);
   const target = terminal ? senderTab ?? ghostTabId : await tabForStep(state.run, senderTab);
+  console.debug("[repeat] ghost ->", { target, status: state.run.status, interrupt: state.interrupt?.type });
   if (target == null) return;
   ghostTabId = target;
   await sendToTab(target, { type: "ghost.show", run: state.run, interrupt: state.interrupt });
